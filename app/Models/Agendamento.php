@@ -16,20 +16,15 @@ class Agendamento extends Model
         'data',
         'hora',
         'especie',
-        'servico_id',
-        'pet_id',
+        'servico',
+        'pet',
+        'user_id',
     ];
 
-    /* ────────────────
-     | Relationships |
-     ────────────────*/
-    public function pet()
+    public function user()
     {
-        return $this->belongsTo(Animal::class, 'pet_id');
-    }
-
-    public function servico()
-    {
-        return $this->belongsTo(Servico::class, 'servico_id');
+        return $this->belongsTo(User::class);
     }
 }
+
+

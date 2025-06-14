@@ -13,14 +13,10 @@ class Animal extends Model
         'nome',
         'peso',
         'idade',
-        'imagem',
         'especie',
         'user_id',
     ];
 
-    /**
-     * Define o relacionamento com o usuário (se houver autenticação por usuários).
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
