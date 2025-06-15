@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Agendamento;
+use App\Models\Animal;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +57,17 @@ class AgendamentoController extends Controller
             'servico_id'  => 'required|exists:servicos,id',
             'pet_id'      => 'required|exists:animals,id',
         ]);
+
+        // Verifica se o pet pertence ao usuário logado
+        $pet = Animal::where('id', $validated['pet_id'])
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$pet) {
+            return response()->json([
+                'message' => 'Você não pode agendar com um pet que não é seu.'
+            ], 403);
+        }
 
         $agendamento = Agendamento::create([
             ...$validated,
@@ -132,6 +144,17 @@ class AgendamentoController extends Controller
             'servico_id'  => 'required|exists:servicos,id',
             'pet_id'      => 'required|exists:animals,id',
         ]);
+
+        // Verifica se o pet pertence ao usuário logado
+        $pet = Animal::where('id', $validated['pet_id'])
+            ->where('user_id', Auth::id())
+            ->first();
+
+        if (!$pet) {
+            return response()->json([
+                'message' => 'Você não pode usar um pet que não é seu.'
+            ], 403);
+        }
 
         $agendamento->update($validated);
 
