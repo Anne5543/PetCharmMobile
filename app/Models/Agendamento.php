@@ -21,19 +21,18 @@ class Agendamento extends Model
         'user_id',
     ];
 
-
-    public function pet()
+    public function user()
     {
-        return $this->belongsTo(Animal::class, 'pet_id');
+        return $this->belongsTo(User::class);
     }
 
     public function servico()
     {
-        return $this->belongsTo(Servico::class, 'servico_id');
+        return $this->belongsTo(Servico::class);
     }
 
-    public function user()
+    public function pet()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Animal::class, 'pet_id');
     }
 }

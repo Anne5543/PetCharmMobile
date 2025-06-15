@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('especie');
             $table->float('peso');
             $table->integer('idade');
-            $table->string('imagem')->nullable();
             $table->timestamps();
         });
     }
