@@ -5,14 +5,43 @@ namespace App\Http\Controllers;
 use App\Models\Agendamento;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class AgendamentoController extends Controller
 {
     public function index(): JsonResponse
     {
-        $agendamentos = Agendamento::with(['pet', 'servico'])->get();
-        return response()->json($agendamentos);
+        $agendamentos = Agendamento::with(['pet', 'servico'])
+            ->where('user_id', Auth::id())
+            ->orderBy('id')
+            ->get()
+            ->map(function ($agendamento) {
+                return [
+                    'id' => $agendamento->id,
+                    'nome' => $agendamento->nome,
+                    'email' => $agendamento->email,
+                    'telefone' => $agendamento->telefone,
+                    'data' => Carbon::parse($agendamento->data)->format('d/m/Y'),
+                    'hora' => Carbon::parse($agendamento->hora)->format('H:i'),
+                    'especie' => $agendamento->especie,
+                    'servico' => [
+                        'id' => $agendamento->servico->id ?? null,
+                        'nome' => $agendamento->servico->nome ?? null,
+                    ],
+                    'pet' => [
+                        'id' => $agendamento->pet->id ?? null,
+                        'nome' => $agendamento->pet->nome ?? null,
+                    ],
+                    'created_at' => $agendamento->created_at,
+                    'updated_at' => $agendamento->updated_at,
+                ];
+            });
+
+        return response()->json([
+            'message' => $agendamentos->isEmpty() ? 'Nenhum agendamento encontrado para o usuário logado.' : 'Agendamentos encontrados com sucesso.',
+            'data' => $agendamentos,
+        ], 200);
     }
 
     public function store(Request $request): JsonResponse
@@ -28,18 +57,71 @@ class AgendamentoController extends Controller
             'pet_id'      => 'required|exists:animals,id',
         ]);
 
-        $agendamento = Agendamento::create($validated);
-        return response()->json($agendamento, 201);
+        $agendamento = Agendamento::create([
+            ...$validated,
+            'user_id' => Auth::id(),
+        ]);
+
+        $agendamento->load(['pet', 'servico']);
+
+        return response()->json([
+            'message' => 'Agendamento criado com sucesso.',
+            'data' => [
+                'id' => $agendamento->id,
+                'nome' => $agendamento->nome,
+                'email' => $agendamento->email,
+                'telefone' => $agendamento->telefone,
+                'data' => Carbon::parse($agendamento->data)->format('d/m/Y'),
+                'hora' => Carbon::parse($agendamento->hora)->format('H:i'),
+                'especie' => $agendamento->especie,
+                'servico' => [
+                    'id' => $agendamento->servico->id ?? null,
+                    'nome' => $agendamento->servico->nome ?? null,
+                ],
+                'pet' => [
+                    'id' => $agendamento->pet->id ?? null,
+                    'nome' => $agendamento->pet->nome ?? null,
+                ],
+                'created_at' => $agendamento->created_at,
+                'updated_at' => $agendamento->updated_at,
+            ],
+        ], 201);
     }
 
     public function show(Agendamento $agendamento): JsonResponse
     {
+        $this->authorizeUser($agendamento);
+
         $agendamento->load(['pet', 'servico']);
-        return response()->json($agendamento);
+
+        return response()->json([
+            'message' => 'Agendamento encontrado.',
+            'data' => [
+                'id' => $agendamento->id,
+                'nome' => $agendamento->nome,
+                'email' => $agendamento->email,
+                'telefone' => $agendamento->telefone,
+                'data' => Carbon::parse($agendamento->data)->format('d/m/Y'),
+                'hora' => Carbon::parse($agendamento->hora)->format('H:i'),
+                'especie' => $agendamento->especie,
+                'servico' => [
+                    'id' => $agendamento->servico->id ?? null,
+                    'nome' => $agendamento->servico->nome ?? null,
+                ],
+                'pet' => [
+                    'id' => $agendamento->pet->id ?? null,
+                    'nome' => $agendamento->pet->nome ?? null,
+                ],
+                'created_at' => $agendamento->created_at,
+                'updated_at' => $agendamento->updated_at,
+            ],
+        ], 200);
     }
 
     public function update(Request $request, Agendamento $agendamento): JsonResponse
     {
+        $this->authorizeUser($agendamento);
+
         $validated = $request->validate([
             'nome'        => 'required|string|max:255',
             'email'       => 'required|email|max:255',
@@ -52,12 +134,48 @@ class AgendamentoController extends Controller
         ]);
 
         $agendamento->update($validated);
-        return response()->json($agendamento);
+
+        $agendamento->load(['pet', 'servico']);
+
+        return response()->json([
+            'message' => 'Agendamento atualizado com sucesso.',
+            'data' => [
+                'id' => $agendamento->id,
+                'nome' => $agendamento->nome,
+                'email' => $agendamento->email,
+                'telefone' => $agendamento->telefone,
+                'data' => Carbon::parse($agendamento->data)->format('d/m/Y'),
+                'hora' => Carbon::parse($agendamento->hora)->format('H:i'),
+                'especie' => $agendamento->especie,
+                'servico' => [
+                    'id' => $agendamento->servico->id ?? null,
+                    'nome' => $agendamento->servico->nome ?? null,
+                ],
+                'pet' => [
+                    'id' => $agendamento->pet->id ?? null,
+                    'nome' => $agendamento->pet->nome ?? null,
+                ],
+                'created_at' => $agendamento->created_at,
+                'updated_at' => $agendamento->updated_at,
+            ],
+        ], 200);
     }
 
     public function destroy(Agendamento $agendamento): JsonResponse
     {
+        $this->authorizeUser($agendamento);
+
         $agendamento->delete();
-        return response()->json(null, 204);
+
+        return response()->json([
+            'message' => 'Agendamento deletado com sucesso.',
+        ], 200);
+    }
+
+    protected function authorizeUser(Agendamento $agendamento): void
+    {
+        if ($agendamento->user_id !== Auth::id()) {
+            abort(403, 'Você não tem permissão para acessar este agendamento.');
+        }
     }
 }

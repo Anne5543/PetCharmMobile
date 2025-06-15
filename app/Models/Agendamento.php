@@ -18,11 +18,10 @@ class Agendamento extends Model
         'especie',
         'servico_id',
         'pet_id',
+        'user_id',
     ];
 
-    /* ────────────────
-     | Relationships |
-     ────────────────*/
+
     public function pet()
     {
         return $this->belongsTo(Animal::class, 'pet_id');
@@ -31,5 +30,10 @@ class Agendamento extends Model
     public function servico()
     {
         return $this->belongsTo(Servico::class, 'servico_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

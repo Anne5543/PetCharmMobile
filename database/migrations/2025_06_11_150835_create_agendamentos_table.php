@@ -26,6 +26,10 @@ return new class extends Migration
                   ->constrained('animals')
                   ->cascadeOnDelete();
 
+            $table->foreignId('user_id')
+                  ->constrained('users')
+                  ->cascadeOnDelete();
+
             $table->timestamps();
         });
     }

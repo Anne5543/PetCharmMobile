@@ -22,14 +22,18 @@ class AnimalController extends Controller
      * Lista todos os animais do usuário autenticado.
      */
     public function index()
-    {
-        $animais = $this->animals->where('user_id', Auth::id())->get();
+{
+    $animais = $this->animals
+        ->where('user_id', Auth::id())
+        ->orderBy('id')
+        ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $animais
-        ], 200);
-    }
+    return response()->json([
+        'success' => true,
+        'data' => $animais
+    ], 200);
+}
+
 
     /**
      * Cria um novo animal.

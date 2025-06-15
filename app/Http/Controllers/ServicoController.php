@@ -9,9 +9,24 @@ use Illuminate\Http\Request;
 class ServicoController extends Controller
 {
     public function index()
-    {
-        return Servico::all();
+{
+    $servicos = Servico::orderBy('id')->get(['id', 'nome']);
+
+    if ($servicos->isEmpty()) {
+        return response()->json([
+            'message' => 'Nenhum serviço encontrado.',
+            'data' => []
+        ], 200);
     }
+
+    return response()->json([
+        'message' => 'Serviços encontrados.',
+        'data' => $servicos
+    ], 200);
+}
+
+
+
 
     public function store(Request $request)
     {

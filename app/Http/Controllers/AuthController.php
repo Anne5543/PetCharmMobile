@@ -15,7 +15,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8', 
+            'password' => 'required|string|min:8',
         ]);
 
         if ($validator->fails()) {
@@ -33,8 +33,10 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Usuário registrado com sucesso.',
             'token'   => $token,
+            'name'    => $user->name, // Adicionado aqui
         ], 201);
     }
+
 
     public function login(Request $request)
     {
@@ -54,11 +56,13 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Login bem-sucedido.',
                 'token'   => $token,
+                'name'    => $user->name, // Adicionado aqui
             ], 200);
         }
 
         return response()->json(['message' => 'Credenciais inválidas.'], 401);
     }
+
 
     public function logout(Request $request)
     {
